@@ -96,6 +96,6 @@ class AuthService(
         val token = jwtService.generateToken(user)
         val roleName = user.roles.firstOrNull()?.name?.replace("ROLE_", "")?.uppercase()
         println("Login successful for email: ${user.email}. Role sent to frontend: ${roleName}")
-        return AuthResponse(token = token, email = user.email, role = roleName, message = "Inicio de sesión exitoso", userId = user.id)
+        return AuthResponse(token = token, email = user.email, name = user.name, role = roleName, message = "Inicio de sesión exitoso", userId = user.id)
     }
 }

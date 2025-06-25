@@ -10,5 +10,7 @@ data class AppointmentDTO(
     val userId: Long,
     val fecha: LocalDate,
     val hora: LocalTime,
-    val email: String
+    val email: String,
+    val phone: String,
+    val employeeId: Long
 )

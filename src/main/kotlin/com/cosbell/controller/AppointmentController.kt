@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDate
 import java.time.LocalTime
+import org.springframework.format.annotation.DateTimeFormat
 
 @RestController
 @RequestMapping("/api/citas")
@@ -46,5 +47,16 @@ class AppointmentController(private val appointmentService: AppointmentService) 
                 else -> ResponseEntity.internalServerError().body(null)
             }
         }
+    }
+
+    @GetMapping
+    fun getAllAppointments(
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) fecha: LocalDate?,
+        @RequestParam(required = false) employeeId: Long?,
+        @RequestParam(required = false) servicioId: Long?,
+        @RequestParam(required = false) userId: Long?
+    ): ResponseEntity<List<Appointment>> {
+        val citas = appointmentService.getAllAppointments(fecha, employeeId, servicioId, userId)
+        return ResponseEntity.ok(citas)
     }
 }

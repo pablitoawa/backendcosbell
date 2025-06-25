@@ -4,15 +4,16 @@ import com.cosbell.dto.AppointmentDTO
 import com.cosbell.entity.Appointment
 import com.cosbell.repository.AppointmentRepository
 import com.cosbell.repository.ServicioRepository
-import org.springframework.mail.SimpleMailMessage
-import org.springframework.mail.javamail.JavaMailSender
+import com.cosbell.repository.UserRepository
 import org.springframework.stereotype.Service
+import java.time.LocalDate
 
 @Service
 class AppointmentService(
     private val appointmentRepository: AppointmentRepository,
     private val servicioRepository: ServicioRepository,
-    private val mailSender: JavaMailSender
+    private val notificationService: NotificationService,
+    private val userRepository: UserRepository
 ) {
     fun createAppointment(request: AppointmentDTO): Appointment {
         println("Attempting to find service with ID: ${request.serviceId}")
@@ -21,6 +22,9 @@ class AppointmentService(
                 println("Service with ID ${request.serviceId} not found in repository.")
                 Exception("Servicio no encontrado") 
             }
+
+        val employee = userRepository.findById(request.employeeId)
+            .orElseThrow { Exception("Empleado no encontrado con ID: ${request.employeeId}") }
 
         if (appointmentRepository.existsByServicioAndFechaAndHora(servicio, request.fecha, request.hora)) {
             throw Exception("Horario ocupado")
@@ -31,20 +35,14 @@ class AppointmentService(
             userId = request.userId,
             fecha = request.fecha,
             hora = request.hora,
-            email = request.email
+            email = request.email,
+            phone = request.phone,
+            employee = employee
         )
 
         val saved = appointmentRepository.save(appointment)
-        enviarConfirmacion(request.email, "Tu cita fue agendada para el ${request.fecha} a las ${request.hora}.")
+        notificationService.sendAppointmentConfirmationEmail(saved)
         return saved
-    }
-
-    private fun enviarConfirmacion(email: String, mensaje: String) {
-        val mail = SimpleMailMessage()
-        mail.setTo(email)
-        mail.setSubject("Confirmación de cita")
-        mail.setText(mensaje)
-        mailSender.send(mail)
     }
 
     fun findByUserId(userId: Long): List<Appointment> {
@@ -67,6 +65,9 @@ class AppointmentService(
         val newServicio = servicioRepository.findById(request.serviceId)
             .orElseThrow { Exception("Servicio no encontrado al actualizar") }
 
+        val newEmployee = userRepository.findById(request.employeeId)
+            .orElseThrow { Exception("Empleado no encontrado con ID: ${request.employeeId}") }
+
         if (appointmentRepository.existsByServicioAndFechaAndHora(newServicio, request.fecha, request.hora) &&
             !(existingAppointment.servicio.id == newServicio.id &&
               existingAppointment.fecha == request.fecha &&
@@ -79,15 +80,24 @@ class AppointmentService(
             userId = request.userId,
             fecha = request.fecha,
             hora = request.hora,
-            email = request.email
+            email = request.email,
+            phone = request.phone,
+            employee = newEmployee
         )
         val saved = appointmentRepository.save(updatedAppointment)
 
-        // Enviar confirmación de modificación
-        val subject = "Confirmación de Modificación de Cita"
-        val message = "Tu cita ha sido modificada. Nuevos detalles: Servicio: ${updatedAppointment.servicio.name}, Fecha: ${updatedAppointment.fecha}, Hora: ${updatedAppointment.hora}."
-        enviarConfirmacion(updatedAppointment.email, message)
+        notificationService.sendAppointmentConfirmationEmail(saved)
 
         return saved
+    }
+
+    fun getAllAppointments(fecha: LocalDate?, employeeId: Long?, servicioId: Long?, userId: Long?): List<Appointment> {
+        return when {
+            fecha != null -> appointmentRepository.findByFecha(fecha)
+            employeeId != null -> appointmentRepository.findByEmployee_Id(employeeId)
+            servicioId != null -> appointmentRepository.findByServicio_Id(servicioId)
+            userId != null -> appointmentRepository.findByUserId(userId)
+            else -> appointmentRepository.findAll()
+        }
     }
 }

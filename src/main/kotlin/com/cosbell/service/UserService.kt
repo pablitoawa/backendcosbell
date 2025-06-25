@@ -111,6 +111,10 @@ class UserService(
             role = user.roles.firstOrNull()?.name
         )
     }
+
+    fun getEmployees(): List<User> {
+        return userRepository.findByRoles_Name("EMPLOYEE")
+    }
 }
 
 

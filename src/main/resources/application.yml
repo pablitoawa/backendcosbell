@@ -49,3 +49,7 @@ spring:
       org.hibernate.SQL: DEBUG
       org.hibernate.type.descriptor.sql.BasicBinder: TRACE
       com.cosbell.spa: DEBUG
+
+whatsapp:
+  phone-number-id: TU_PHONE_NUMBER_ID
+  access-token: TU_ACCESS_TOKEN

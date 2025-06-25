@@ -16,4 +16,6 @@ interface AppointmentRepository : JpaRepository<Appointment, Long> {
     fun findByEmail(email: String): List<Appointment>
     fun findByFecha(fecha: LocalDate): List<Appointment>
     fun findByUserId(userId: Long): List<Appointment>
+    fun findByEmployee_Id(employeeId: Long): List<Appointment>
+    fun findByServicio_Id(servicioId: Long): List<Appointment>
 }

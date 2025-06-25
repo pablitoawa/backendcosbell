@@ -27,5 +27,12 @@ data class Appointment(
     val email: String,
 
     @Column(nullable = false)
+    val phone: String,
+
+    @ManyToOne
+    @JoinColumn(name = "employee_id", nullable = false)
+    val employee: User,
+
+    @Column(nullable = false)
     val status: String = "PENDING"
 )
